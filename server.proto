@@ -25,6 +25,10 @@ package servidor;
 service Greeter {
     rpc Criar(CriarCanalRequest) returns (ResponseCriarCanal);
     rpc Remover(RemoverCanalRequest) returns (RemoverCanalResponse);
+    rpc ReceberMensagem(MensagemRequest) returns (MensagemResponse);
+    rpc Assinar(AssinaturaRequest) returns (stream MensagemResponse); 
+
+    rpc AssinaturaStream(stream AssinaturaRequest) returns (stream MensagemResponse);
 }
 
 // Definindo tipos de canais através de Enum
@@ -41,7 +45,7 @@ message CriarCanalRequest {
 
 }
 
-// Define a mensagem de response de criação de canal
+// Define a mensagem para a response de criação de canal
 message ResponseCriarCanal {
     string mensagem = 1;
 }
@@ -49,10 +53,28 @@ message ResponseCriarCanal {
 // Definindo a mensagem de remoção de canal
 message RemoverCanalRequest {
     string nome = 1;
-    string nome_criador = 2;  // Nome do criador que solicita a remoção
+    string nome_criador = 2;  
 }
 
-// Define a mensagem de response para remoção
+// Define a mensagem para a response para remoção
 message RemoverCanalResponse {
     string mensagem = 1;
+}
+
+// Define a mensagem para o request para envio de mensagem para o canal
+message MensagemRequest {
+    string nome_canal = 1;  
+    string nome_criador = 2;     
+    string mensagem = 3;  
+}
+
+// Define a mensagem de response para envio de mensagem
+message MensagemResponse {
+    string mensagem = 1;
+}
+
+// Define a mensagem para o request de assinatura
+message AssinaturaRequest {
+    string nome_canal = 1; 
+    string cliente = 2; 
 }
