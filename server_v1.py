@@ -1,11 +1,12 @@
 
 from concurrent import futures
+import random
 import grpc
 import logging
 import sqlite3
 import server_pb2
 import server_pb2_grpc
-import asyncio
+
 from collections import defaultdict
 
 DATABASE_CANAIS = 'canais.db'
@@ -76,53 +77,7 @@ class Greeter(server_pb2_grpc.GreeterServicer):
         for nome_canal, cliente in assinaturas:
             self.assinantes[nome_canal].add(cliente)
 
-    async def Assinar(self, request, context):
-        nome_canal = request.nome_canal
-        cliente = request.cliente
-        
-        if cliente in self.assinantes[nome_canal]:
-            return server_pb2.MensagemResponse(mensagem=f"Cliente '{cliente}' já está assinado ao canal '{nome_canal}'.")
-
-        # Adiciona o cliente à lista de assinantes do canal
-        self.assinantes[nome_canal].add(cliente)
-
-        # Armazena a assinatura no banco de dados
-        conn = sqlite3.connect(DATABASE_ASSINATURAS)
-        cursor = conn.cursor()
-        cursor.execute('INSERT INTO assinaturas (nome_canal, cliente) VALUES (?, ?)', (nome_canal, cliente))
-        conn.commit()
-        conn.close()
-
-        print(f"Cliente '{cliente}' assinou o canal '{nome_canal}'.")
-
-        return server_pb2.MensagemResponse(mensagem=f"Assinatura realizada para o canal '{nome_canal}'.")
-
-    # async def periodic_message_check(self):
-    #     while True:
-    #         await asyncio.sleep(10)  
-            
-    #         conn_mensagens = sqlite3.connect(DATABASE_MENSAGENS)
-    #         cursor_mensagens = conn_mensagens.cursor()
-    #         cursor_mensagens.execute('SELECT id, nome_canal, criador, mensagem FROM mensagens WHERE enviada = 0')
-    #         mensagens = cursor_mensagens.fetchall()
-
-    #         for msg_id, nome_canal, criador, mensagem in mensagens:
-    #             assinantes = self.assinantes.get(nome_canal, [])
-    #             for assinante in assinantes:
-    #                 for stream in self.client_streams.get(nome_canal, []):
-    #                     try:
-    #                         await stream.write(server_pb2.MensagemResponse(mensagem=f"Canal: {nome_canal}, Criador: {criador}, Mensagem: {mensagem}"))
-    #                     except grpc.RpcError as e:
-    #                         print(f"Erro ao enviar mensagem para o cliente: {e}")
-    #                         self.client_streams[nome_canal].remove(stream)
-                    
-    #             # Marca a mensagem como enviada
-    #             cursor_mensagens.execute('UPDATE mensagens SET enviada = 1 WHERE id = ?', (msg_id,))
-    #             conn_mensagens.commit()
-
-    #         conn_mensagens.close()
-
-
+    ## CRIAÇÃO DE CANAL
     def Criar(self, request, context):
         # Separa variaveis da requisição de criação de canal
         nome = request.nome
@@ -148,14 +103,15 @@ class Greeter(server_pb2_grpc.GreeterServicer):
 
         mensagem = f"Canal criado: nome={nome}, tipo_canal={tipo_canal}, nome_criador={nome_criador}. Total de canais: {len(canais)}"
         
-        # Imprime no console todos os canais após a criação de um novo
+        # Imprime no console todos os canais para checagem
         print(mensagem)
-        # print("Lista de canais criados:")
-        # for canal in canais:
-        #     print(f"Nome: {canal[0]}, Tipo: {canal[1]}, Nome do Criador: {canal[2]}")
+        print("Lista de canais no servidor:")
+        for canal in canais:
+            print(f"Nome: {canal[0]}, Tipo: {canal[1]}, Nome do Criador: {canal[2]}")
 
         return server_pb2.ResponseCriarCanal(mensagem=mensagem)
     
+    ## EXCLUIR CANAL CRIADO
     def Remover(self, request, context):
         # Separa variaveis da requisição de remoção de canal
         nome = request.nome
@@ -181,12 +137,13 @@ class Greeter(server_pb2_grpc.GreeterServicer):
 
         # Imprime no console todos os canais para checagem
         print(mensagem)
-        print("Lista de canais criados:")
+        print("Lista de canais no servidor:")
         for canal in canais:
             print(f"Nome: {canal[0]}, Tipo: {canal[1]}, Nome do Criador: {canal[2]}")
         
         return server_pb2.RemoverCanalResponse(mensagem=mensagem)
     
+    ## ENVIO DE MENSAGEM DO CLIENTE PARA O SERVIDOR
     def ReceberMensagem(self, request, context):
         nome_canal = request.nome_canal
         nome_criador = request.nome_criador
@@ -208,13 +165,13 @@ class Greeter(server_pb2_grpc.GreeterServicer):
 
             resposta = f"Mensagem enviada ao canal '{nome_canal}' por '{nome_criador}'."
         else:
-            resposta = f"Falha ao enviar mensagem: Canal '{nome_canal}' não encontrado ou '{nome_criador}' não é o autor."
+            resposta = f"Falha ao enviar receber mensagem: Canal '{nome_canal}' não encontrado ou '{nome_criador}' não é o autor."
         
         # Imprime no console
         print(resposta)
         
         return server_pb2.MensagemResponse(mensagem=resposta)
-
+    
 # Inicialização do servidor
 def serve():
 
