@@ -55,16 +55,6 @@ class GreeterStub(object):
                 request_serializer=server__pb2.MensagemRequest.SerializeToString,
                 response_deserializer=server__pb2.MensagemResponse.FromString,
                 _registered_method=True)
-        self.Assinar = channel.unary_stream(
-                '/servidor.Greeter/Assinar',
-                request_serializer=server__pb2.AssinaturaRequest.SerializeToString,
-                response_deserializer=server__pb2.MensagemResponse.FromString,
-                _registered_method=True)
-        self.AssinaturaStream = channel.stream_stream(
-                '/servidor.Greeter/AssinaturaStream',
-                request_serializer=server__pb2.AssinaturaRequest.SerializeToString,
-                response_deserializer=server__pb2.MensagemResponse.FromString,
-                _registered_method=True)
 
 
 class GreeterServicer(object):
@@ -89,18 +79,6 @@ class GreeterServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def Assinar(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def AssinaturaStream(self, request_iterator, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
 
 def add_GreeterServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -117,16 +95,6 @@ def add_GreeterServicer_to_server(servicer, server):
             'ReceberMensagem': grpc.unary_unary_rpc_method_handler(
                     servicer.ReceberMensagem,
                     request_deserializer=server__pb2.MensagemRequest.FromString,
-                    response_serializer=server__pb2.MensagemResponse.SerializeToString,
-            ),
-            'Assinar': grpc.unary_stream_rpc_method_handler(
-                    servicer.Assinar,
-                    request_deserializer=server__pb2.AssinaturaRequest.FromString,
-                    response_serializer=server__pb2.MensagemResponse.SerializeToString,
-            ),
-            'AssinaturaStream': grpc.stream_stream_rpc_method_handler(
-                    servicer.AssinaturaStream,
-                    request_deserializer=server__pb2.AssinaturaRequest.FromString,
                     response_serializer=server__pb2.MensagemResponse.SerializeToString,
             ),
     }
@@ -211,60 +179,6 @@ class Greeter(object):
             target,
             '/servidor.Greeter/ReceberMensagem',
             server__pb2.MensagemRequest.SerializeToString,
-            server__pb2.MensagemResponse.FromString,
-            options,
-            channel_credentials,
-            insecure,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-            _registered_method=True)
-
-    @staticmethod
-    def Assinar(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_stream(
-            request,
-            target,
-            '/servidor.Greeter/Assinar',
-            server__pb2.AssinaturaRequest.SerializeToString,
-            server__pb2.MensagemResponse.FromString,
-            options,
-            channel_credentials,
-            insecure,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-            _registered_method=True)
-
-    @staticmethod
-    def AssinaturaStream(request_iterator,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.stream_stream(
-            request_iterator,
-            target,
-            '/servidor.Greeter/AssinaturaStream',
-            server__pb2.AssinaturaRequest.SerializeToString,
             server__pb2.MensagemResponse.FromString,
             options,
             channel_credentials,
