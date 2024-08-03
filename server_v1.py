@@ -37,6 +37,7 @@ def init_db_mensagens():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             nome_canal TEXT NOT NULL,
             nome_criador TEXT NOT NULL,
+            destinatario TEXT,
             mensagem TEXT NOT NULL,
             enviada BOOLEAN NOT NULL DEFAULT 0,
             FOREIGN KEY(nome_canal) REFERENCES canais(nome)
@@ -152,28 +153,55 @@ class Greeter(server_pb2_grpc.GreeterServicer):
         # Verifica se o canal existe e se o criador é o dono do canal
         conn = sqlite3.connect(DATABASE_CANAIS)
         cursor = conn.cursor()
-        cursor.execute('SELECT nome_criador FROM canais WHERE nome = ?', (nome_canal,))
+        cursor.execute('SELECT tipo_canal, nome_criador FROM canais WHERE nome = ?', (nome_canal,))
         result = cursor.fetchone()
         
-        if result and result[0] == nome_criador:
-            # Salva a mensagem no banco de dados
-            conn_mensagens = sqlite3.connect(DATABASE_MENSAGENS)
-            cursor_mensagens = conn_mensagens.cursor()
-            cursor_mensagens.execute('INSERT INTO mensagens (nome_canal, nome_criador, mensagem, enviada) VALUES (?, ?, ?, ?)', (nome_canal, nome_criador, mensagem, 0))
-            conn_mensagens.commit()
-            conn_mensagens.close()
-
-            resposta = f"Mensagem enviada ao canal '{nome_canal}' por '{nome_criador}'."
-        else:
-            resposta = f"Falha ao enviar receber mensagem: Canal '{nome_canal}' não encontrado ou '{nome_criador}' não é o autor."
+        if result and result[1] == nome_criador:
+            tipo_canal = result[0]
+            conn.close()
             
-        conn_mensagens.close()
-        conn.close()
-        
-        # Imprime no console
-        print(resposta)
-        
-        return server_pb2.MensagemResponse(mensagem=resposta)
+            # AQUI É ESCOLHIDO UM ASSINANTE ALEATORIO DO CANAL E NA CRIAÇÃO DA MENSAGEM, É ASSUMIDO A MENSAGEM A ELE
+            if tipo_canal == 0:  # Canal Simples
+                conn_assinaturas = sqlite3.connect(DATABASE_ASSINATURAS)
+                cursor_assinaturas = conn_assinaturas.cursor()
+                cursor_assinaturas.execute('SELECT cliente FROM assinaturas WHERE nome_canal = ?', (nome_canal,))
+                assinantes = cursor_assinaturas.fetchall()
+                
+                if assinantes:
+                    assinante = random.choice(assinantes)[0]  
+                    conn_mensagens = sqlite3.connect(DATABASE_MENSAGENS)
+                    cursor_mensagens = conn_mensagens.cursor()
+                    cursor_mensagens.execute('INSERT INTO mensagens (nome_canal, nome_criador, destinatario, mensagem, enviada) VALUES (?, ?, ?, ?, ?)', (nome_canal, nome_criador, assinante, mensagem, 0))
+                    conn_mensagens.commit()
+                    conn_mensagens.close()
+
+                    print(f"Mensagem do canal '{nome_canal}' criada para o assinante '{assinante}'.")
+                    return server_pb2.MensagemResponse(mensagem=f"Mensagem enviada ao canal '{nome_canal}' para o assinante '{assinante}'.")
+
+            # AQUI É ATRIBUIDO A MENSAGEM NO DB PARA TODOS OS ASSINANTES DO CANAL
+            elif tipo_canal == 1:  # Canal Múltiplo
+                conn_assinaturas = sqlite3.connect(DATABASE_ASSINATURAS)
+                cursor_assinaturas = conn_assinaturas.cursor()
+                cursor_assinaturas.execute('SELECT cliente FROM assinaturas WHERE nome_canal = ?', (nome_canal,))
+                assinantes = cursor_assinaturas.fetchall()
+                
+                if assinantes:
+                    conn_mensagens = sqlite3.connect(DATABASE_MENSAGENS)
+                    cursor_mensagens = conn_mensagens.cursor()
+                    
+                    for assinante in assinantes:
+                        cursor_mensagens.execute('INSERT INTO mensagens (nome_canal, nome_criador, destinatario, mensagem, enviada) VALUES (?, ?, ?, ?, ?)', (nome_canal, nome_criador, assinante[0], mensagem, 0))
+                        print(f"Mensagem do canal '{nome_canal}' criada para o assinante '{assinante[0]}'.")
+                        
+                    conn_mensagens.commit()
+                    conn_mensagens.close()
+                    return server_pb2.MensagemResponse(mensagem=f"Mensagem enviada ao canal '{nome_canal}' para todos os assinantes.")
+                
+            return server_pb2.MensagemResponse(mensagem=f"Mensagem enviada ao canal '{nome_canal}'.")
+            
+        else:
+            conn.close()
+            return server_pb2.MensagemResponse(mensagem=f"Falha ao enviar mensagem: Canal '{nome_canal}' não encontrado ou '{nome_criador}' não é o autor do Canal.")
     
     def AssinarCanal(self, request, context):
         nome_canal = request.nome_canal
