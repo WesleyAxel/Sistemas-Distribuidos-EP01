@@ -1,5 +1,5 @@
-
 from concurrent import futures
+import time
 import random
 import grpc
 import logging
@@ -37,6 +37,7 @@ def init_db_mensagens():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             nome_canal TEXT NOT NULL,
             nome_criador TEXT NOT NULL,
+            destinatario TEXT,
             mensagem TEXT NOT NULL,
             enviada BOOLEAN NOT NULL DEFAULT 0,
             FOREIGN KEY(nome_canal) REFERENCES canais(nome)
@@ -45,7 +46,7 @@ def init_db_mensagens():
     conn.commit()
     conn.close()
 
-# inicialização do database de assinaturas de canais
+# inicialização do database de assinaturas de canais e criação caso ele não exista
 def init_db_assinaturas():
     conn = sqlite3.connect(DATABASE_ASSINATURAS)
     cursor = conn.cursor()
@@ -152,25 +153,144 @@ class Greeter(server_pb2_grpc.GreeterServicer):
         # Verifica se o canal existe e se o criador é o dono do canal
         conn = sqlite3.connect(DATABASE_CANAIS)
         cursor = conn.cursor()
-        cursor.execute('SELECT nome_criador FROM canais WHERE nome = ?', (nome_canal,))
+        cursor.execute('SELECT tipo_canal, nome_criador FROM canais WHERE nome = ?', (nome_canal,))
         result = cursor.fetchone()
         
-        if result and result[0] == nome_criador:
-            # Salva a mensagem no banco de dados
-            conn_mensagens = sqlite3.connect(DATABASE_MENSAGENS)
-            cursor_mensagens = conn_mensagens.cursor()
-            cursor_mensagens.execute('INSERT INTO mensagens (nome_canal, nome_criador, mensagem, enviada) VALUES (?, ?, ?, ?)', (nome_canal, nome_criador, mensagem, 0))
-            conn_mensagens.commit()
-            conn_mensagens.close()
+        if result and result[1] == nome_criador:
+            tipo_canal = result[0]
+            conn.close()
+            
+            # AQUI É ESCOLHIDO UM ASSINANTE ALEATORIO DO CANAL E NA CRIAÇÃO DA MENSAGEM, É ASSUMIDO A MENSAGEM A ELE
+            if tipo_canal == 0:  # Canal Simples
+                conn_assinaturas = sqlite3.connect(DATABASE_ASSINATURAS)
+                cursor_assinaturas = conn_assinaturas.cursor()
+                cursor_assinaturas.execute('SELECT cliente FROM assinaturas WHERE nome_canal = ?', (nome_canal,))
+                assinantes = cursor_assinaturas.fetchall()
+                
+                if assinantes:
+                    assinante = random.choice(assinantes)[0]  
+                    conn_mensagens = sqlite3.connect(DATABASE_MENSAGENS)
+                    cursor_mensagens = conn_mensagens.cursor()
+                    cursor_mensagens.execute('INSERT INTO mensagens (nome_canal, nome_criador, destinatario, mensagem, enviada) VALUES (?, ?, ?, ?, ?)', (nome_canal, nome_criador, assinante, mensagem, 0))
+                    conn_mensagens.commit()
+                    conn_mensagens.close()
 
-            resposta = f"Mensagem enviada ao canal '{nome_canal}' por '{nome_criador}'."
+                    print(f"Mensagem do canal '{nome_canal}' criada para o assinante '{assinante}'.")
+                    return server_pb2.MensagemResponse(mensagem=f"Mensagem enviada ao canal '{nome_canal}' para o assinante '{assinante}'.")
+
+            # AQUI É ATRIBUIDO A MENSAGEM NO DB PARA TODOS OS ASSINANTES DO CANAL
+            elif tipo_canal == 1:  # Canal Múltiplo
+                conn_assinaturas = sqlite3.connect(DATABASE_ASSINATURAS)
+                cursor_assinaturas = conn_assinaturas.cursor()
+                cursor_assinaturas.execute('SELECT cliente FROM assinaturas WHERE nome_canal = ?', (nome_canal,))
+                assinantes = cursor_assinaturas.fetchall()
+                
+                if assinantes:
+                    conn_mensagens = sqlite3.connect(DATABASE_MENSAGENS)
+                    cursor_mensagens = conn_mensagens.cursor()
+                    
+                    for assinante in assinantes:
+                        cursor_mensagens.execute('INSERT INTO mensagens (nome_canal, nome_criador, destinatario, mensagem, enviada) VALUES (?, ?, ?, ?, ?)', (nome_canal, nome_criador, assinante[0], mensagem, 0))
+                        print(f"Mensagem do canal '{nome_canal}' criada para o assinante '{assinante[0]}'.")
+
+                    conn_mensagens.commit()
+                    conn_mensagens.close()
+                    return server_pb2.MensagemResponse(mensagem=f"Mensagem enviada ao canal '{nome_canal}' para todos os assinantes.")
+                
+            return server_pb2.MensagemResponse(mensagem=f"Mensagem enviada ao canal '{nome_canal}'.")
+            
         else:
-            resposta = f"Falha ao enviar receber mensagem: Canal '{nome_canal}' não encontrado ou '{nome_criador}' não é o autor."
+            conn.close()
+            return server_pb2.MensagemResponse(mensagem=f"Falha ao enviar mensagem: Canal '{nome_canal}' não encontrado ou '{nome_criador}' não é o autor do Canal.")
+    
+    def AssinarCanal(self, request, context):
+        nome_canal = request.nome_canal
+        nome_criador = request.nome_criador
+
+        # Verifica se o canal existe
+        conn = sqlite3.connect(DATABASE_CANAIS)
+        cursor = conn.cursor()
+        cursor.execute('SELECT COUNT(*) FROM canais WHERE nome = ?', (nome_canal,))
+        if cursor.fetchone()[0] == 0:
+            conn.close()
+            return server_pb2.ResponseAssinarCanal(mensagem=f"Falha ao assinar: Canal '{nome_canal}' não encontrado.")
+        conn.close()
         
-        # Imprime no console
+        # Adiciona a assinatura no banco de dados
+        conn = sqlite3.connect(DATABASE_ASSINATURAS)
+        cursor = conn.cursor()
+        cursor.execute('INSERT INTO assinaturas (nome_canal, cliente) VALUES (?, ?)', (nome_canal, nome_criador))
+        conn.commit()
+        conn.close()
+
+        self.assinantes[nome_canal].add(nome_criador)
+
+        resposta = f"Cliente '{nome_criador}' assinado ao canal '{nome_canal}'."
         print(resposta)
+        return server_pb2.ResponseAssinarCanal(mensagem=resposta)
+    
+    def RemoverAssinaturaCanal(self, request, context):
+        nome_canal = request.nome_canal
+        nome_criador = request.nome_criador
+
+        # Verifica se o canal existe
+        conn = sqlite3.connect(DATABASE_CANAIS)
+        cursor = conn.cursor()
+        cursor.execute('SELECT COUNT(*) FROM canais WHERE nome = ?', (nome_canal,))
+        if cursor.fetchone()[0] == 0:
+            conn.close()
+            return server_pb2.ResponseRemoverAssinaturaCanal(mensagem=f"Falha ao remover assinatura: Canal '{nome_canal}' não encontrado.")
+        conn.close()
         
-        return server_pb2.MensagemResponse(mensagem=resposta)
+        # Remove a assinatura do banco de dados
+        conn = sqlite3.connect(DATABASE_ASSINATURAS)
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM assinaturas WHERE nome_canal = ? AND cliente = ?', (nome_canal, nome_criador))
+        conn.commit()
+        conn.close()
+
+        if nome_criador in self.assinantes[nome_canal]:
+            self.assinantes[nome_canal].remove(nome_criador)
+
+        resposta = f"Assinatura de '{nome_criador}' removida do canal '{nome_canal}'."
+        print(resposta)
+        return server_pb2.ResponseRemoverAssinaturaCanal(mensagem=resposta)
+    
+    def EnviarMensagensStream(self, request, context):
+        nome_cliente = request.nome_cliente
+        conn = sqlite3.connect(DATABASE_MENSAGENS)
+        cursor = conn.cursor()
+        
+        start_time = time.time()
+        while True:
+            # SELECT DE TODAS AS MENSAGENS PENDENTES
+            cursor.execute('SELECT id, nome_canal, nome_criador, mensagem FROM mensagens WHERE destinatario = ? AND enviada = 0', (nome_cliente,))
+            mensagens = cursor.fetchall()
+            
+            if not mensagens:
+                # SE NÃO TIVER MENSAGENS, FINALIZAR STREAM DEPOIS DE 5 SEGUNDOS
+                elapsed_time = time.time() - start_time
+                if elapsed_time < 5:
+                    time.sleep(5 - elapsed_time)
+                break
+            
+            for mensagem in mensagens:
+                # ENVIAR TODAS AS MENSAGENS A CADA 3 SEGUNDOS
+                id_mensagem, nome_canal, nome_criador, texto = mensagem
+                yield server_pb2.MensagemStreamResponse(
+                    nome_canal=nome_canal,
+                    nome_criador=nome_criador,
+                    mensagem=texto
+                )
+                time.sleep(3)  # TIMER DE 3 SEGUNDOS PARA ENVIAR MENSAGENS 
+                
+                # AQUI SETA A MENSAGEM COMO ENVIADA
+                cursor.execute('UPDATE mensagens SET enviada = 1 WHERE id = ?', (id_mensagem,))
+                conn.commit()
+
+        print(f"Finalizando a transmissão para o cliente '{nome_cliente}' após enviar todas as mensagens.")
+
+        conn.close()
     
 # Inicialização do servidor
 def serve():

@@ -25,12 +25,16 @@ def remover_canal(stub, nome_usuario):
     print(response.mensagem)
 
 # FUNÇÃO CRIADA PARA QUE SEJA FEITA A ASSINATURA DE CANAL
-def assinar_canal():
-    print('IMPLEMENTAR')
+def assinar_canal(stub,nome_usuario):
+    nome_canal = input("Digite o nome do canal que deseja assinar o serviço de mensagens: ")
+    response = stub.AssinarCanal(server_pb2.AssinarCanalRequest(nome_canal=nome_canal, nome_criador=nome_usuario))
+    print(response.mensagem)
 
 # FUNÇÃO CRIADA PARA QUE SEJA FEITA A REMOÇÃO DA ASSINATURA DE CANAL
-def desassinar_canal():
-    print('IMPLEMENTAR')
+def desassinar_canal(stub,nome_usuario):
+    nome_canal = input("Digite o nome do canal que deseja remover a assinatura de mensagens: ")
+    response = stub.RemoverAssinaturaCanal(server_pb2.RemoverAssinaturaCanalRequest(nome_canal=nome_canal, nome_criador=nome_usuario))
+    print(response.mensagem)
 
 # FUNÇÃO CRIADA PARA QUE SEJA ENVIAR MENSAGEM A UM CANAL
 def enviar_mensagem(stub, nome_usuario):
@@ -38,6 +42,13 @@ def enviar_mensagem(stub, nome_usuario):
     mensagem = input("Digite a mensagem: ")
     response = stub.ReceberMensagem(server_pb2.MensagemRequest(nome_canal=nome_canal, nome_criador=nome_usuario, mensagem=mensagem))
     print(response.mensagem)
+
+# FUNÇÃO CRIADA PARA QUE SEJA CRIADA A STREAM DE ENVIOS DE MENSAGENS DOS CANAIS
+def receber_mensagem(stub, nome_usuario):
+    request = server_pb2.EnviarMensagensStreamRequest(nome_cliente=nome_usuario)
+    response_iterator = stub.EnviarMensagensStream(request)
+    for response in response_iterator:
+        print(f"Canal: {response.nome_canal}, Mensagem do canal: {response.mensagem}")
 
 def run():
     nome_usuario = ""
@@ -57,7 +68,8 @@ def run():
             print("3. Assinar canal")
             print("4. Desassinar canal")
             print("5. Enviar mensagem")
-            print("6. Sair")
+            print("6. Receber todas as mensagens pendentes")
+            print("7. Sair")
             escolha = input("Escolha uma opção: ")
 
             if escolha == "1":
@@ -65,12 +77,14 @@ def run():
             elif escolha == "2":
                 remover_canal(stub, nome_usuario)
             elif escolha == "3":
-                assinar_canal()
+                assinar_canal(stub, nome_usuario)
             elif escolha == "4":
-                desassinar_canal()
+                desassinar_canal(stub, nome_usuario)
             elif escolha == "5":
                 enviar_mensagem(stub, nome_usuario)
             elif escolha == "6":
+                receber_mensagem(stub, nome_usuario)
+            elif escolha == "7":
                 break
             else:
                 print("Opção inválida!")
