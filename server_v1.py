@@ -291,6 +291,42 @@ class Greeter(server_pb2_grpc.GreeterServicer):
         print(f"Finalizando a transmissão para o cliente '{nome_cliente}' após enviar todas as mensagens.")
 
         conn.close()
+
+    def EnviarMensagem(self, request, context):
+        nome_cliente = request.nome_cliente
+        conn = sqlite3.connect(DATABASE_MENSAGENS)
+        cursor = conn.cursor()
+        cursor.execute('SELECT id, nome_canal, nome_criador, mensagem FROM mensagens WHERE destinatario = ? AND enviada = 0', (nome_cliente,))
+        mensagens = cursor.fetchone()
+
+        start_time = time.time()
+
+        if not mensagens:
+            # SE NÃO TIVER MENSAGENS, FINALIZAR O ENVIO DE MENSAGEM UNICA DEPOIS DE 5 SEGUNDOS
+            elapsed_time = time.time() - start_time
+            if elapsed_time < 5:
+                time.sleep(5 - elapsed_time)
+            
+            resposta = f"Não existe mais mensagens pendentes'."
+            print(resposta)
+            return server_pb2.ResponseMensagemUnica(
+                mensagem=resposta 
+            )
+        
+        else:
+            for mensagem in mensagens:
+                # ENVIAR A UNICA MENSAGEM ENCONTRADA
+                id_mensagem, nome_canal, nome_criador, texto = mensagem
+                resposta = server_pb2.ResponseMensagemUnica(
+                    nome_canal=nome_canal,
+                    nome_criador=nome_criador,
+                    mensagem=texto
+                )                
+                # AQUI SETA A MENSAGEM COMO ENVIADA
+                cursor.execute('UPDATE mensagens SET enviada = 1 WHERE id = ?', (id_mensagem,))
+                conn.commit()
+            
+                return resposta
     
 # Inicialização do servidor
 def serve():
