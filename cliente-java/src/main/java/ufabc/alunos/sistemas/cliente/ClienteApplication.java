@@ -43,7 +43,9 @@ public class ClienteApplication {
 			System.out.println("3. Assinar canal");
 			System.out.println("4. Desassinar canal");
 			System.out.println("5. Enviar mensagem");
-			System.out.println("6. Sair");
+			System.out.println("6. Receber todas as mensagens em modo stream");
+			System.out.println("7. Receber uma unica mensagem");
+			System.out.println("8. Sair");
 			System.out.print("Escolha uma opção: ");
 			String escolha = scanner.nextLine();
 
@@ -55,15 +57,21 @@ public class ClienteApplication {
 					client.removerCanal(nomeUsuario);
 					break;
 				case "3":
-					client.assinarCanal();
+					client.assinarCanal(nomeUsuario);
 					break;
 				case "4":
-					client.desassinarCanal();
+					client.desassinarCanal(nomeUsuario);
 					break;
 				case "5":
 					client.enviarMensagem(nomeUsuario);
 					break;
 				case "6":
+					client.receberMensagensMultiplas(nomeUsuario);
+					break;
+				case "7":
+					client.receberMensagemUnica(nomeUsuario);
+					break;
+				case "8":
 					channel.shutdown();
 					return;
 				default:

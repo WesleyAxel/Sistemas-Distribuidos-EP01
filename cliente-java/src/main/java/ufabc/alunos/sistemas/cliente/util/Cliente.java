@@ -1,6 +1,7 @@
 package ufabc.alunos.sistemas.cliente.util;
 
 import java.util.Scanner;
+import java.util.Iterator;
 import java.util.regex.Pattern;
 
 import io.grpc.ManagedChannel;
@@ -49,12 +50,28 @@ public class Cliente {
         System.out.println(response.getMensagem());
     }
 
-    public void assinarCanal(){
-        System.out.println("IMPLEMENTAR");
+    public void assinarCanal(String nomeUsuario){
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Digite o nome do canal que deseja assinar o servico de mensagens: ");
+        String nomeCanal = scanner.nextLine();
+        AssinarCanalRequest request = AssinarCanalRequest.newBuilder()
+                .setNomeCanal(nomeCanal)
+                .setNomeCriador(nomeUsuario)
+                .build();
+        ResponseAssinarCanal response = blockingStub.assinarCanal(request);
+        System.out.println(response.getMensagem());
     }
 
-    public void desassinarCanal(){
-        System.out.println("IMPLEMENTAR");
+    public void desassinarCanal(String nomeUsuario){
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Digite o nome do canal que deseja remover a assinatura do servico de mensagens: ");
+        String nomeCanal = scanner.nextLine();
+        RemoverAssinaturaCanalRequest request = RemoverAssinaturaCanalRequest.newBuilder()
+                .setNomeCanal(nomeCanal)
+                .setNomeCriador(nomeUsuario)
+                .build();
+        ResponseRemoverAssinaturaCanal response = blockingStub.removerAssinaturaCanal(request);
+        System.out.println(response.getMensagem());
     }
 
     public void enviarMensagem(String nomeUsuario) {
@@ -70,5 +87,24 @@ public class Cliente {
                 .build();
         MensagemResponse response = blockingStub.receberMensagem(request);
         System.out.println(response.getMensagem());
+    }
+
+    public void receberMensagensMultiplas(String nomeUsuario){
+        EnviarMensagensStreamRequest request = EnviarMensagensStreamRequest.newBuilder()
+                .setNomeCliente(nomeUsuario)
+                .build();
+        Iterator<MensagemStreamResponse> responses = blockingStub.enviarMensagensStream(request);
+        while (responses.hasNext()) {
+            MensagemStreamResponse response = responses.next();
+            System.out.println("Canal: " + response.getNomeCanal() + ", Mensagem do canal: " + response.getMensagem());
+        }
+    }
+
+    public void receberMensagemUnica(String nomeUsuario){
+        EnviarMensagemUnicaStreamRequest request = EnviarMensagemUnicaStreamRequest.newBuilder()
+                .setNomeCliente(nomeUsuario)
+                .build();
+        ResponseMensagemUnica response = blockingStub.enviarMensagemUnica(request);
+        System.out.println("Canal: " + response.getNomeCanal() + ", Mensagem do canal: " + response.getMensagem());
     }
 }
