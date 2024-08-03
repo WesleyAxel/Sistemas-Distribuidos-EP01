@@ -1,5 +1,5 @@
-
 from concurrent import futures
+import time
 import random
 import grpc
 import logging
@@ -46,7 +46,7 @@ def init_db_mensagens():
     conn.commit()
     conn.close()
 
-# inicialização do database de assinaturas de canais
+# inicialização do database de assinaturas de canais e criação caso ele não exista
 def init_db_assinaturas():
     conn = sqlite3.connect(DATABASE_ASSINATURAS)
     cursor = conn.cursor()
@@ -192,7 +192,7 @@ class Greeter(server_pb2_grpc.GreeterServicer):
                     for assinante in assinantes:
                         cursor_mensagens.execute('INSERT INTO mensagens (nome_canal, nome_criador, destinatario, mensagem, enviada) VALUES (?, ?, ?, ?, ?)', (nome_canal, nome_criador, assinante[0], mensagem, 0))
                         print(f"Mensagem do canal '{nome_canal}' criada para o assinante '{assinante[0]}'.")
-                        
+
                     conn_mensagens.commit()
                     conn_mensagens.close()
                     return server_pb2.MensagemResponse(mensagem=f"Mensagem enviada ao canal '{nome_canal}' para todos os assinantes.")
@@ -255,6 +255,42 @@ class Greeter(server_pb2_grpc.GreeterServicer):
         resposta = f"Assinatura de '{nome_criador}' removida do canal '{nome_canal}'."
         print(resposta)
         return server_pb2.ResponseRemoverAssinaturaCanal(mensagem=resposta)
+    
+    def EnviarMensagensStream(self, request, context):
+        nome_cliente = request.nome_cliente
+        conn = sqlite3.connect(DATABASE_MENSAGENS)
+        cursor = conn.cursor()
+        
+        start_time = time.time()
+        while True:
+            # SELECT DE TODAS AS MENSAGENS PENDENTES
+            cursor.execute('SELECT id, nome_canal, nome_criador, mensagem FROM mensagens WHERE destinatario = ? AND enviada = 0', (nome_cliente,))
+            mensagens = cursor.fetchall()
+            
+            if not mensagens:
+                # SE NÃO TIVER MENSAGENS, FINALIZAR STREAM DEPOIS DE 5 SEGUNDOS
+                elapsed_time = time.time() - start_time
+                if elapsed_time < 5:
+                    time.sleep(5 - elapsed_time)
+                break
+            
+            for mensagem in mensagens:
+                # ENVIAR TODAS AS MENSAGENS A CADA 3 SEGUNDOS
+                id_mensagem, nome_canal, nome_criador, texto = mensagem
+                yield server_pb2.MensagemStreamResponse(
+                    nome_canal=nome_canal,
+                    nome_criador=nome_criador,
+                    mensagem=texto
+                )
+                time.sleep(3)  # TIMER DE 3 SEGUNDOS PARA ENVIAR MENSAGENS 
+                
+                # AQUI SETA A MENSAGEM COMO ENVIADA
+                cursor.execute('UPDATE mensagens SET enviada = 1 WHERE id = ?', (id_mensagem,))
+                conn.commit()
+
+        print(f"Finalizando a transmissão para o cliente '{nome_cliente}' após enviar todas as mensagens.")
+
+        conn.close()
     
 # Inicialização do servidor
 def serve():

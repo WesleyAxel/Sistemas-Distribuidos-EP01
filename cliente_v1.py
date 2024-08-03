@@ -43,8 +43,12 @@ def enviar_mensagem(stub, nome_usuario):
     response = stub.ReceberMensagem(server_pb2.MensagemRequest(nome_canal=nome_canal, nome_criador=nome_usuario, mensagem=mensagem))
     print(response.mensagem)
 
-def receber_mensagem():
-    print('IMPLEMENTAR')
+# FUNÇÃO CRIADA PARA QUE SEJA CRIADA A STREAM DE ENVIOS DE MENSAGENS DOS CANAIS
+def receber_mensagem(stub, nome_usuario):
+    request = server_pb2.EnviarMensagensStreamRequest(nome_cliente=nome_usuario)
+    response_iterator = stub.EnviarMensagensStream(request)
+    for response in response_iterator:
+        print(f"Canal: {response.nome_canal}, Mensagem do canal: {response.mensagem}")
 
 def run():
     nome_usuario = ""
@@ -79,7 +83,7 @@ def run():
             elif escolha == "5":
                 enviar_mensagem(stub, nome_usuario)
             elif escolha == "6":
-                receber_mensagem()
+                receber_mensagem(stub, nome_usuario)
             elif escolha == "7":
                 break
             else:
