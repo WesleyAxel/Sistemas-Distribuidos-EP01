@@ -28,6 +28,7 @@ service Greeter {
     rpc RemoverAssinaturaCanal(RemoverAssinaturaCanalRequest) returns (ResponseRemoverAssinaturaCanal);
     rpc ReceberMensagem(MensagemRequest) returns (MensagemResponse);
     rpc EnviarMensagensStream(EnviarMensagensStreamRequest) returns (stream MensagemStreamResponse);
+    rpc EnviarMensagemUnica(EnviarMensagemUnicaStreamRequest) returns (ResponseMensagemUnica);
 }
 
 // Definindo tipos de canais através de Enum
@@ -99,9 +100,23 @@ message EnviarMensagensStreamRequest {
     string nome_cliente = 1;
 }
 
+// Define a mensagem para o request de uma unica mensagem
+message EnviarMensagemUnicaStreamRequest {
+    string nome_cliente = 1;
+}
+
 // Define a mensagem de respose para o stream de mensagens.
 message MensagemStreamResponse {
     string nome_canal = 1;
     string nome_criador = 2;
     string mensagem = 3;
 }
+
+// Define a mensagem de respose para uma unica mensagen.
+message ResponseMensagemUnica {
+    string nome_canal = 1;
+    string nome_criador = 2;
+    string mensagem = 3;
+}
+
+

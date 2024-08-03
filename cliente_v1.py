@@ -44,11 +44,15 @@ def enviar_mensagem(stub, nome_usuario):
     print(response.mensagem)
 
 # FUNÇÃO CRIADA PARA QUE SEJA CRIADA A STREAM DE ENVIOS DE MENSAGENS DOS CANAIS
-def receber_mensagem(stub, nome_usuario):
+def receber_mensagemMultiplas(stub, nome_usuario):
     request = server_pb2.EnviarMensagensStreamRequest(nome_cliente=nome_usuario)
     response_iterator = stub.EnviarMensagensStream(request)
     for response in response_iterator:
         print(f"Canal: {response.nome_canal}, Mensagem do canal: {response.mensagem}")
+
+def receber_mensagemUnica(stub, nome_usuario):
+    request = stub.EnviarMensagem(server_pb2.EnviarMensagemUnicaStreamRequest(nome_cliente=nome_usuario))
+    print(f"Canal: {request.nome_canal}, Mensagem do canal: {request.mensagem}")        
 
 def run():
     nome_usuario = ""
@@ -69,7 +73,8 @@ def run():
             print("4. Desassinar canal")
             print("5. Enviar mensagem")
             print("6. Receber todas as mensagens pendentes")
-            print("7. Sair")
+            print("7. Receber uma unica mensagen pendente")            
+            print("8. Sair")
             escolha = input("Escolha uma opção: ")
 
             if escolha == "1":
@@ -83,8 +88,10 @@ def run():
             elif escolha == "5":
                 enviar_mensagem(stub, nome_usuario)
             elif escolha == "6":
-                receber_mensagem(stub, nome_usuario)
+                receber_mensagemMultiplas(stub, nome_usuario)
             elif escolha == "7":
+                receber_mensagemUnica(stub, nome_usuario)
+            elif escolha == "8":
                 break
             else:
                 print("Opção inválida!")
