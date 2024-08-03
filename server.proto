@@ -24,6 +24,8 @@ package servidor;
 service Greeter {
     rpc Criar(CriarCanalRequest) returns (ResponseCriarCanal);
     rpc Remover(RemoverCanalRequest) returns (RemoverCanalResponse);
+    rpc AssinarCanal(AssinarCanalRequest) returns (ResponseAssinarCanal);
+    rpc RemoverAssinaturaCanal(RemoverAssinaturaCanalRequest) returns (ResponseRemoverAssinaturaCanal);
     rpc ReceberMensagem(MensagemRequest) returns (MensagemResponse);
 }
 
@@ -69,3 +71,24 @@ message MensagemResponse {
     string mensagem = 1;
 }
 
+// Define a mensagem para o request para assinar algum canal
+message AssinarCanalRequest {
+    string nome_canal = 1;
+    string nome_criador = 2;  
+}
+
+// Define a mensagem para o request para remover a assinatura de algum canal
+message RemoverAssinaturaCanalRequest {
+    string nome_canal = 1;
+    string nome_criador = 2;  
+}
+
+// Define a mensagem de response para a assinatura de um canal
+message ResponseAssinarCanal {
+    string mensagem = 1;
+}
+
+// Define a mensagem de response para a remoção de assinatura de um canal
+message ResponseRemoverAssinaturaCanal {
+    string mensagem = 1;
+}

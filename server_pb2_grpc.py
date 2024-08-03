@@ -50,6 +50,16 @@ class GreeterStub(object):
                 request_serializer=server__pb2.RemoverCanalRequest.SerializeToString,
                 response_deserializer=server__pb2.RemoverCanalResponse.FromString,
                 _registered_method=True)
+        self.AssinarCanal = channel.unary_unary(
+                '/servidor.Greeter/AssinarCanal',
+                request_serializer=server__pb2.AssinarCanalRequest.SerializeToString,
+                response_deserializer=server__pb2.ResponseAssinarCanal.FromString,
+                _registered_method=True)
+        self.RemoverAssinaturaCanal = channel.unary_unary(
+                '/servidor.Greeter/RemoverAssinaturaCanal',
+                request_serializer=server__pb2.RemoverAssinaturaCanalRequest.SerializeToString,
+                response_deserializer=server__pb2.ResponseRemoverAssinaturaCanal.FromString,
+                _registered_method=True)
         self.ReceberMensagem = channel.unary_unary(
                 '/servidor.Greeter/ReceberMensagem',
                 request_serializer=server__pb2.MensagemRequest.SerializeToString,
@@ -73,6 +83,18 @@ class GreeterServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def AssinarCanal(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def RemoverAssinaturaCanal(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def ReceberMensagem(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -91,6 +113,16 @@ def add_GreeterServicer_to_server(servicer, server):
                     servicer.Remover,
                     request_deserializer=server__pb2.RemoverCanalRequest.FromString,
                     response_serializer=server__pb2.RemoverCanalResponse.SerializeToString,
+            ),
+            'AssinarCanal': grpc.unary_unary_rpc_method_handler(
+                    servicer.AssinarCanal,
+                    request_deserializer=server__pb2.AssinarCanalRequest.FromString,
+                    response_serializer=server__pb2.ResponseAssinarCanal.SerializeToString,
+            ),
+            'RemoverAssinaturaCanal': grpc.unary_unary_rpc_method_handler(
+                    servicer.RemoverAssinaturaCanal,
+                    request_deserializer=server__pb2.RemoverAssinaturaCanalRequest.FromString,
+                    response_serializer=server__pb2.ResponseRemoverAssinaturaCanal.SerializeToString,
             ),
             'ReceberMensagem': grpc.unary_unary_rpc_method_handler(
                     servicer.ReceberMensagem,
@@ -153,6 +185,60 @@ class Greeter(object):
             '/servidor.Greeter/Remover',
             server__pb2.RemoverCanalRequest.SerializeToString,
             server__pb2.RemoverCanalResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def AssinarCanal(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/servidor.Greeter/AssinarCanal',
+            server__pb2.AssinarCanalRequest.SerializeToString,
+            server__pb2.ResponseAssinarCanal.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def RemoverAssinaturaCanal(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/servidor.Greeter/RemoverAssinaturaCanal',
+            server__pb2.RemoverAssinaturaCanalRequest.SerializeToString,
+            server__pb2.ResponseRemoverAssinaturaCanal.FromString,
             options,
             channel_credentials,
             insecure,

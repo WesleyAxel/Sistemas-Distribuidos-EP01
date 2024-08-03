@@ -166,11 +166,67 @@ class Greeter(server_pb2_grpc.GreeterServicer):
             resposta = f"Mensagem enviada ao canal '{nome_canal}' por '{nome_criador}'."
         else:
             resposta = f"Falha ao enviar receber mensagem: Canal '{nome_canal}' não encontrado ou '{nome_criador}' não é o autor."
+            
+        conn_mensagens.close()
+        conn.close()
         
         # Imprime no console
         print(resposta)
         
         return server_pb2.MensagemResponse(mensagem=resposta)
+    
+    def AssinarCanal(self, request, context):
+        nome_canal = request.nome_canal
+        nome_criador = request.nome_criador
+
+        # Verifica se o canal existe
+        conn = sqlite3.connect(DATABASE_CANAIS)
+        cursor = conn.cursor()
+        cursor.execute('SELECT COUNT(*) FROM canais WHERE nome = ?', (nome_canal,))
+        if cursor.fetchone()[0] == 0:
+            conn.close()
+            return server_pb2.ResponseAssinarCanal(mensagem=f"Falha ao assinar: Canal '{nome_canal}' não encontrado.")
+        conn.close()
+        
+        # Adiciona a assinatura no banco de dados
+        conn = sqlite3.connect(DATABASE_ASSINATURAS)
+        cursor = conn.cursor()
+        cursor.execute('INSERT INTO assinaturas (nome_canal, cliente) VALUES (?, ?)', (nome_canal, nome_criador))
+        conn.commit()
+        conn.close()
+
+        self.assinantes[nome_canal].add(nome_criador)
+
+        resposta = f"Cliente '{nome_criador}' assinado ao canal '{nome_canal}'."
+        print(resposta)
+        return server_pb2.ResponseAssinarCanal(mensagem=resposta)
+    
+    def RemoverAssinaturaCanal(self, request, context):
+        nome_canal = request.nome_canal
+        nome_criador = request.nome_criador
+
+        # Verifica se o canal existe
+        conn = sqlite3.connect(DATABASE_CANAIS)
+        cursor = conn.cursor()
+        cursor.execute('SELECT COUNT(*) FROM canais WHERE nome = ?', (nome_canal,))
+        if cursor.fetchone()[0] == 0:
+            conn.close()
+            return server_pb2.ResponseRemoverAssinaturaCanal(mensagem=f"Falha ao remover assinatura: Canal '{nome_canal}' não encontrado.")
+        conn.close()
+        
+        # Remove a assinatura do banco de dados
+        conn = sqlite3.connect(DATABASE_ASSINATURAS)
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM assinaturas WHERE nome_canal = ? AND cliente = ?', (nome_canal, nome_criador))
+        conn.commit()
+        conn.close()
+
+        if nome_criador in self.assinantes[nome_canal]:
+            self.assinantes[nome_canal].remove(nome_criador)
+
+        resposta = f"Assinatura de '{nome_criador}' removida do canal '{nome_canal}'."
+        print(resposta)
+        return server_pb2.ResponseRemoverAssinaturaCanal(mensagem=resposta)
     
 # Inicialização do servidor
 def serve():
