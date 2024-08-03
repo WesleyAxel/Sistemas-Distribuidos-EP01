@@ -51,7 +51,7 @@ def receber_mensagemMultiplas(stub, nome_usuario):
         print(f"Canal: {response.nome_canal}, Mensagem do canal: {response.mensagem}")
 
 def receber_mensagemUnica(stub, nome_usuario):
-    request = stub.EnviarMensagem(server_pb2.EnviarMensagemUnicaStreamRequest(nome_cliente=nome_usuario))
+    request = stub.EnviarMensagemUnica(server_pb2.EnviarMensagemUnicaStreamRequest(nome_cliente=nome_usuario))
     print(f"Canal: {request.nome_canal}, Mensagem do canal: {request.mensagem}")        
 
 def run():

@@ -24,7 +24,11 @@ package servidor;
 service Greeter {
   rpc Criar(CriarCanalRequest) returns (ResponseCriarCanal);
   rpc Remover(RemoverCanalRequest) returns (RemoverCanalResponse);
+  rpc AssinarCanal(AssinarCanalRequest) returns (ResponseAssinarCanal);
+  rpc RemoverAssinaturaCanal(RemoverAssinaturaCanalRequest) returns (ResponseRemoverAssinaturaCanal);
   rpc ReceberMensagem(MensagemRequest) returns (MensagemResponse);
+  rpc EnviarMensagensStream(EnviarMensagensStreamRequest) returns (stream MensagemStreamResponse);
+  rpc EnviarMensagemUnica(EnviarMensagemUnicaStreamRequest) returns (ResponseMensagemUnica);
 }
 
 // Definindo tipos de canais através de Enum
@@ -67,4 +71,50 @@ message MensagemRequest {
 // Define a mensagem de response para envio de mensagem
 message MensagemResponse {
   string mensagem = 1;
+}
+
+// Define a mensagem para o request para assinar algum canal
+message AssinarCanalRequest {
+  string nome_canal = 1;
+  string nome_criador = 2;
+}
+
+// Define a mensagem para o request para remover a assinatura de algum canal
+message RemoverAssinaturaCanalRequest {
+  string nome_canal = 1;
+  string nome_criador = 2;
+}
+
+// Define a mensagem de response para a assinatura de um canal
+message ResponseAssinarCanal {
+  string mensagem = 1;
+}
+
+// Define a mensagem de response para a remoção de assinatura de um canal
+message ResponseRemoverAssinaturaCanal {
+  string mensagem = 1;
+}
+
+// Define a mensagem para o request de stream de mensagens
+message EnviarMensagensStreamRequest {
+  string nome_cliente = 1;
+}
+
+// Define a mensagem para o request de uma unica mensagem
+message EnviarMensagemUnicaStreamRequest {
+  string nome_cliente = 1;
+}
+
+// Define a mensagem de respose para o stream de mensagens.
+message MensagemStreamResponse {
+  string nome_canal = 1;
+  string nome_criador = 2;
+  string mensagem = 3;
+}
+
+// Define a mensagem de respose para uma unica mensagen.
+message ResponseMensagemUnica {
+  string nome_canal = 1;
+  string nome_criador = 2;
+  string mensagem = 3;
 }
