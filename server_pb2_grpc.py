@@ -72,7 +72,7 @@ class GreeterStub(object):
                 _registered_method=True)
         self.EnviarMensagemUnica = channel.unary_unary(
                 '/servidor.Greeter/EnviarMensagemUnica',
-                request_serializer=server__pb2.EnviarMensagemUnicaStreamRequest.SerializeToString,
+                request_serializer=server__pb2.EnviarMensagemUnicaRequest.SerializeToString,
                 response_deserializer=server__pb2.ResponseMensagemUnica.FromString,
                 _registered_method=True)
 
@@ -158,7 +158,7 @@ def add_GreeterServicer_to_server(servicer, server):
             ),
             'EnviarMensagemUnica': grpc.unary_unary_rpc_method_handler(
                     servicer.EnviarMensagemUnica,
-                    request_deserializer=server__pb2.EnviarMensagemUnicaStreamRequest.FromString,
+                    request_deserializer=server__pb2.EnviarMensagemUnicaRequest.FromString,
                     response_serializer=server__pb2.ResponseMensagemUnica.SerializeToString,
             ),
     }
@@ -350,7 +350,7 @@ class Greeter(object):
             request,
             target,
             '/servidor.Greeter/EnviarMensagemUnica',
-            server__pb2.EnviarMensagemUnicaStreamRequest.SerializeToString,
+            server__pb2.EnviarMensagemUnicaRequest.SerializeToString,
             server__pb2.ResponseMensagemUnica.FromString,
             options,
             channel_credentials,

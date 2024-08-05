@@ -292,7 +292,7 @@ class Greeter(server_pb2_grpc.GreeterServicer):
 
         conn.close()
 
-    def EnviarMensagem(self, request, context):
+    def EnviarMensagemUnica(self, request, context):
         nome_cliente = request.nome_cliente
         conn = sqlite3.connect(DATABASE_MENSAGENS)
         cursor = conn.cursor()
