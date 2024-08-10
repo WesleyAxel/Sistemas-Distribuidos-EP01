@@ -108,4 +108,5 @@ public class Cliente {
         ResponseMensagemUnica response = blockingStub.enviarMensagemUnica(request);
         System.out.println("Canal: " + response.getNomeCanal() + ", Mensagem do canal: " + response.getMensagem());
     }
+
 }
