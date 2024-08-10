@@ -9,13 +9,13 @@ import ufabc.alunos.sistemas.cliente.*;
 
 public class Cliente {
 
-    private GreeterGrpc.GreeterBlockingStub blockingStub;
+    public GreeterGrpc.GreeterBlockingStub blockingStub;
 
     public Cliente(ManagedChannel channel) {
         blockingStub = GreeterGrpc.newBlockingStub(channel);
     }
 
-    public Boolean validarNome(String nome){
+    public static Boolean validarNome(String nome){
         if(nome.length() > 20){
             return false;
         }
