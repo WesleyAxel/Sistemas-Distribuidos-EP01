@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
+import ufabc.aluno.sistemas.cliente.*;
 import ufabc.alunos.sistemas.cliente.util.Cliente;
 import io.grpc.ManagedChannel;
 
