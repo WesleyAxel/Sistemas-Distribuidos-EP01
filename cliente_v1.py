@@ -51,7 +51,7 @@ def receber_mensagemMultiplas(stub, nome_usuario):
         print(f"Canal: {response.nome_canal}, Mensagem do canal: {response.mensagem}")
 
 def receber_mensagemUnica(stub, nome_usuario):
-    request = stub.EnviarMensagemUnica(server_pb2.EnviarMensagemUnicaStreamRequest(nome_cliente=nome_usuario))
+    request = stub.EnviarMensagemUnica(server_pb2.EnviarMensagemUnicaRequest(nome_cliente=nome_usuario))
     print(f"Canal: {request.nome_canal}, Mensagem do canal: {request.mensagem}")        
 
 def run():
@@ -73,7 +73,7 @@ def run():
             print("4. Desassinar canal")
             print("5. Enviar mensagem")
             print("6. Receber todas as mensagens pendentes")
-            print("7. Receber uma unica mensagen pendente")            
+            print("7. Receber uma unica mensagem pendente de canal")            
             print("8. Sair")
             escolha = input("Escolha uma opção: ")
 
