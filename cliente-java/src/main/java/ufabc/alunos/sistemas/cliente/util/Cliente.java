@@ -5,17 +5,18 @@ import java.util.Iterator;
 import java.util.regex.Pattern;
 
 import io.grpc.ManagedChannel;
+import ufabc.aluno.sistemas.cliente.*;
 import ufabc.alunos.sistemas.cliente.*;
 
 public class Cliente {
 
-    private GreeterGrpc.GreeterBlockingStub blockingStub;
+    public GreeterGrpc.GreeterBlockingStub blockingStub;
 
     public Cliente(ManagedChannel channel) {
         blockingStub = GreeterGrpc.newBlockingStub(channel);
     }
 
-    public Boolean validarNome(String nome){
+    public static Boolean validarNome(String nome){
         if(nome.length() > 20){
             return false;
         }
@@ -101,10 +102,11 @@ public class Cliente {
     }
 
     public void receberMensagemUnica(String nomeUsuario){
-        EnviarMensagemUnicaStreamRequest request = EnviarMensagemUnicaStreamRequest.newBuilder()
+        EnviarMensagemUnicaRequest request = EnviarMensagemUnicaRequest.newBuilder()
                 .setNomeCliente(nomeUsuario)
                 .build();
         ResponseMensagemUnica response = blockingStub.enviarMensagemUnica(request);
         System.out.println("Canal: " + response.getNomeCanal() + ", Mensagem do canal: " + response.getMensagem());
     }
+
 }
