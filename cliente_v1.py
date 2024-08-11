@@ -52,7 +52,11 @@ def receber_mensagemMultiplas(stub, nome_usuario):
 
 def receber_mensagemUnica(stub, nome_usuario):
     request = stub.EnviarMensagemUnica(server_pb2.EnviarMensagemUnicaRequest(nome_cliente=nome_usuario))
-    print(f"Canal: {request.nome_canal}, Mensagem do canal: {request.mensagem}")        
+    print(f"Canal: {request.nome_canal}, Mensagem do canal: {request.mensagem}")   
+
+def lista_canais(stub):
+    response = stub.ListaCanais(server_pb2.CriarCanalRequest())
+    print(response.mensagem)
 
 def run():
     nome_usuario = ""
@@ -73,8 +77,9 @@ def run():
             print("4. Desassinar canal")
             print("5. Enviar mensagem")
             print("6. Receber todas as mensagens pendentes")
-            print("7. Receber uma unica mensagem pendente de canal")            
-            print("8. Sair")
+            print("7. Receber uma unica mensagem pendente de canal")
+            print("8. Listar todos os canais disponiveis")           
+            print("9. Sair")
             escolha = input("Escolha uma opção: ")
 
             if escolha == "1":
@@ -92,6 +97,8 @@ def run():
             elif escolha == "7":
                 receber_mensagemUnica(stub, nome_usuario)
             elif escolha == "8":
+                lista_canais(stub)
+            elif escolha == "9":
                 break
             else:
                 print("Opção inválida!")

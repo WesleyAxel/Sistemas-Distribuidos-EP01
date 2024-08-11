@@ -75,6 +75,11 @@ class GreeterStub(object):
                 request_serializer=server__pb2.EnviarMensagemUnicaRequest.SerializeToString,
                 response_deserializer=server__pb2.ResponseMensagemUnica.FromString,
                 _registered_method=True)
+        self.ListaCanais = channel.unary_unary(
+                '/servidor.Greeter/ListaCanais',
+                request_serializer=server__pb2.ListaCanaisRequest.SerializeToString,
+                response_deserializer=server__pb2.ListaCanaisResponse.FromString,
+                _registered_method=True)
 
 
 class GreeterServicer(object):
@@ -123,6 +128,12 @@ class GreeterServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ListaCanais(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_GreeterServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -160,6 +171,11 @@ def add_GreeterServicer_to_server(servicer, server):
                     servicer.EnviarMensagemUnica,
                     request_deserializer=server__pb2.EnviarMensagemUnicaRequest.FromString,
                     response_serializer=server__pb2.ResponseMensagemUnica.SerializeToString,
+            ),
+            'ListaCanais': grpc.unary_unary_rpc_method_handler(
+                    servicer.ListaCanais,
+                    request_deserializer=server__pb2.ListaCanaisRequest.FromString,
+                    response_serializer=server__pb2.ListaCanaisResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -352,6 +368,33 @@ class Greeter(object):
             '/servidor.Greeter/EnviarMensagemUnica',
             server__pb2.EnviarMensagemUnicaRequest.SerializeToString,
             server__pb2.ResponseMensagemUnica.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ListaCanais(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/servidor.Greeter/ListaCanais',
+            server__pb2.ListaCanaisRequest.SerializeToString,
+            server__pb2.ListaCanaisResponse.FromString,
             options,
             channel_credentials,
             insecure,

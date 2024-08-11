@@ -109,4 +109,10 @@ public class Cliente {
         System.out.println("Canal: " + response.getNomeCanal() + ", Mensagem do canal: " + response.getMensagem());
     }
 
+    public void listaCanais(){
+        ListaCanaisRequest request = ListaCanaisRequest.newBuilder().build();
+        ListaCanaisResponse response = blockingStub.listaCanais(request);
+        System.out.println(response.getMensagem());
+    }
+
 }
