@@ -326,6 +326,21 @@ class Greeter(server_pb2_grpc.GreeterServicer):
             conn.commit()
             
             return resposta
+        
+    def ListaCanais(self, request, context):
+        conn = sqlite3.connect(DATABASE_CANAIS)
+        cursor = conn.cursor()
+
+        cursor.execute('SELECT nome, tipo_canal, nome_criador FROM canais')
+        canais = cursor.fetchall()
+        conn.close()
+
+        mensagem = ""
+
+        for canal in canais:
+            mensagem += f"Nome: {canal[0]}, Tipo: {canal[1]}, Nome do Criador: {canal[2]}\n"
+
+        return server_pb2.ListaCanaisResponse(mensagem=mensagem)
     
 # Inicialização do servidor
 def serve():

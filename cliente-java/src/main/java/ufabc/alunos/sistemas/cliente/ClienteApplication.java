@@ -45,7 +45,8 @@ public class ClienteApplication {
 			System.out.println("5. Enviar mensagem");
 			System.out.println("6. Receber todas as mensagens em modo stream");
 			System.out.println("7. Receber uma unica mensagem");
-			System.out.println("8. Sair");
+			System.out.println("8. Listar todos os canais disponiveis");
+			System.out.println("9. Sair");
 			System.out.print("Escolha uma opção: ");
 			String escolha = scanner.nextLine();
 
@@ -72,6 +73,9 @@ public class ClienteApplication {
 					client.receberMensagemUnica(nomeUsuario);
 					break;
 				case "8":
+					client.listaCanais();
+					break;
+				case "9":
 					channel.shutdown();
 					return;
 				default:

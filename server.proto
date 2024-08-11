@@ -29,6 +29,7 @@ service Greeter {
     rpc ReceberMensagem(MensagemRequest) returns (MensagemResponse);
     rpc EnviarMensagensStream(EnviarMensagensStreamRequest) returns (stream MensagemStreamResponse);
     rpc EnviarMensagemUnica(EnviarMensagemUnicaRequest) returns (ResponseMensagemUnica);
+    rpc ListaCanais(ListaCanaisRequest) returns (ListaCanaisResponse);
 }
 
 // Definindo tipos de canais através de Enum
@@ -117,6 +118,14 @@ message ResponseMensagemUnica {
     string nome_canal = 1;
     string nome_criador = 2;
     string mensagem = 3;
+}
+
+message ListaCanaisRequest{
+    string mensagem = 1;
+}
+
+message ListaCanaisResponse{
+    string mensagem = 1;
 }
 
 
